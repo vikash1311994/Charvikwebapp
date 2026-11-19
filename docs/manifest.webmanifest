@@ -1,0 +1,26 @@
+{
+  "name": "Charvik — Newborn Care Tracker",
+  "short_name": "Charvik",
+  "description": "100% offline newborn care tracker for Charvik with dynamic feed targets, reflux & pumping timers, breathing & temperature safety checks, Apollo Hospitals vaccination schedule, and Apple Calendar alarm export.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF6F0",
+  "theme_color": "#1F5E5B",
+  "categories": ["health", "medical", "lifestyle"],
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

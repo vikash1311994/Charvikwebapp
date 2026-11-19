@@ -1,0 +1,207 @@
+{
+  "entities": {
+    "BabyProfile": {
+      "title": "BabyProfile",
+      "description": "Baseline profile and dynamic care targets for Charvik.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID." },
+        "babyName": { "type": "string", "description": "Baby name." },
+        "dob": { "type": "string", "description": "ISO-8601 date of birth (YYYY-MM-DD)." },
+        "termStatus": { "type": "string", "description": "Gestational status, e.g. late_preterm." },
+        "dueDateReached": { "type": "boolean", "description": "Whether ~40 weeks corrected age has been reached." },
+        "lastWeightKg": { "type": "number", "description": "Most recent recorded weight in kg." },
+        "feedIntervalHours": { "type": "number", "description": "Target interval between feeds in hours." },
+        "postFeedUprightMin": { "type": "integer", "description": "Target upright reflux hold duration in minutes." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp on creation." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp on update." }
+      },
+      "required": [
+        "userId",
+        "babyName",
+        "dob",
+        "termStatus",
+        "dueDateReached",
+        "lastWeightKg",
+        "feedIntervalHours",
+        "postFeedUprightMin",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "FeedLog": {
+      "title": "FeedLog",
+      "description": "Logged feeding session with breast/bottle quantities and reflux hold metadata.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "feedType": { "type": "string", "enum": ["BREAST_PLUS_BOTTLE", "BREAST_ONLY", "BOTTLE_EBM", "BOTTLE_FORMULA"] },
+        "breastMinutes": { "type": "integer" },
+        "bottleMl": { "type": "integer" },
+        "burpedMidFeed": { "type": "boolean" },
+        "uprightHoldMinutes": { "type": "integer" },
+        "salineBeforeFeed": { "type": "boolean" },
+        "note": { "type": "string" },
+        "loggedAtMillis": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "userId",
+        "feedType",
+        "breastMinutes",
+        "bottleMl",
+        "burpedMidFeed",
+        "uprightHoldMinutes",
+        "salineBeforeFeed",
+        "loggedAtMillis",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "DigestionLog": {
+      "title": "DigestionLog",
+      "description": "Wet diaper, stool, hiccup, gas, and silent reflux/mucus log.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "wetDiaper": { "type": "boolean" },
+        "stoolPassed": { "type": "boolean" },
+        "stoolColor": { "type": "string", "enum": ["NONE", "YELLOW_SEEDY", "MUSTARD", "GREEN", "WATERY", "HARD", "MUCOUSY"] },
+        "refluxOrSpitUp": { "type": "string", "enum": ["NONE", "MILD_MUCUS", "SMALL_SPIT", "PROJECTILE"] },
+        "hiccups": { "type": "boolean" },
+        "gasOrDiscomfort": { "type": "boolean" },
+        "note": { "type": "string" },
+        "loggedAtMillis": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "userId",
+        "wetDiaper",
+        "stoolPassed",
+        "stoolColor",
+        "refluxOrSpitUp",
+        "hiccups",
+        "gasOrDiscomfort",
+        "loggedAtMillis",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CareEvent": {
+      "title": "CareEvent",
+      "description": "Pumping session, nasal suctioning, weight entry, vitals red-flag check, or daily routine completion.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "category": { "type": "string", "enum": ["PUMP", "NASAL_SUCTION", "WEIGHT", "VITALS", "ROUTINE"] },
+        "title": { "type": "string" },
+        "numericValue": { "type": "number" },
+        "secondaryValue": { "type": "number" },
+        "flagAlert": { "type": "boolean" },
+        "dateKey": { "type": "string" },
+        "note": { "type": "string" },
+        "loggedAtMillis": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "userId",
+        "category",
+        "title",
+        "numericValue",
+        "secondaryValue",
+        "flagAlert",
+        "dateKey",
+        "loggedAtMillis",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "VaccineRecord": {
+      "title": "VaccineRecord",
+      "description": "Apollo Hospitals / IAP pediatric immunization tracking record.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "vaccineCode": { "type": "string" },
+        "name": { "type": "string" },
+        "stageLabel": { "type": "string" },
+        "dueDateIso": { "type": "string" },
+        "status": { "type": "string", "enum": ["PENDING", "DONE"] },
+        "administeredDateIso": { "type": "string" },
+        "hospitalNote": { "type": "string" },
+        "reminderEnabled": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "userId",
+        "vaccineCode",
+        "name",
+        "stageLabel",
+        "dueDateIso",
+        "status",
+        "reminderEnabled",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CareAlarm": {
+      "title": "CareAlarm",
+      "description": "Scheduled alarm reminder for feed, pumping, Vitamin D3 & sun, or vaccination.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "alarmType": { "type": "string", "enum": ["FEED", "PUMP", "VITAMIN_D_SUN", "VACCINE", "CUSTOM"] },
+        "label": { "type": "string" },
+        "hour": { "type": "integer" },
+        "minute": { "type": "integer" },
+        "triggerAtMillis": { "type": "integer" },
+        "repeatDaily": { "type": "boolean" },
+        "enabled": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "userId",
+        "alarmType",
+        "label",
+        "hour",
+        "minute",
+        "triggerAtMillis",
+        "repeatDaily",
+        "enabled",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/profile/{profileId}": {
+      "schema": { "$ref": "#/entities/BabyProfile" },
+      "description": "Charvik baseline profile and dynamic targets."
+    },
+    "/users/{userId}/feeds/{feedId}": {
+      "schema": { "$ref": "#/entities/FeedLog" },
+      "description": "Logged feeds for the authenticated parent."
+    },
+    "/users/{userId}/digestionLogs/{logId}": {
+      "schema": { "$ref": "#/entities/DigestionLog" },
+      "description": "Wet diapers, stool, and silent reflux logs."
+    },
+    "/users/{userId}/careEvents/{eventId}": {
+      "schema": { "$ref": "#/entities/CareEvent" },
+      "description": "Pumping, nasal suction, weight, vitals, and daily routine logs."
+    },
+    "/users/{userId}/vaccines/{vaccineId}": {
+      "schema": { "$ref": "#/entities/VaccineRecord" },
+      "description": "Apollo Hospitals / IAP vaccination schedule items."
+    },
+    "/users/{userId}/alarms/{alarmId}": {
+      "schema": { "$ref": "#/entities/CareAlarm" },
+      "description": "Scheduled reminder alarms with sound."
+    }
+  }
+}

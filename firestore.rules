@@ -1,0 +1,213 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidTimestamp(ts) {
+      return ts is timestamp && ts <= request.time;
+    }
+
+    function isValidBabyProfile(data, userId) {
+      return data.userId == userId &&
+             data.babyName is string && data.babyName.size() >= 1 && data.babyName.size() <= 60 &&
+             data.dob is string && data.dob.size() == 10 &&
+             data.termStatus is string && data.termStatus.size() >= 1 && data.termStatus.size() <= 40 &&
+             data.dueDateReached is bool &&
+             data.lastWeightKg is number && data.lastWeightKg >= 0.5 && data.lastWeightKg <= 25.0 &&
+             data.feedIntervalHours is number && data.feedIntervalHours >= 1.0 && data.feedIntervalHours <= 6.0 &&
+             data.postFeedUprightMin is int && data.postFeedUprightMin >= 5 && data.postFeedUprightMin <= 60;
+    }
+
+    function isValidFeedLog(data, userId) {
+      return data.userId == userId &&
+             data.feedType in ['BREAST_PLUS_BOTTLE', 'BREAST_ONLY', 'BOTTLE_EBM', 'BOTTLE_FORMULA'] &&
+             data.breastMinutes is int && data.breastMinutes >= 0 && data.breastMinutes <= 180 &&
+             data.bottleMl is int && data.bottleMl >= 0 && data.bottleMl <= 400 &&
+             data.burpedMidFeed is bool &&
+             data.uprightHoldMinutes is int && data.uprightHoldMinutes >= 0 && data.uprightHoldMinutes <= 120 &&
+             data.salineBeforeFeed is bool &&
+             (!('note' in data) || (data.note is string && data.note.size() <= 300)) &&
+             data.loggedAtMillis is int && data.loggedAtMillis > 0;
+    }
+
+    function isValidDigestionLog(data, userId) {
+      return data.userId == userId &&
+             data.wetDiaper is bool &&
+             data.stoolPassed is bool &&
+             data.stoolColor in ['NONE', 'YELLOW_SEEDY', 'MUSTARD', 'GREEN', 'WATERY', 'HARD', 'MUCOUSY'] &&
+             data.refluxOrSpitUp in ['NONE', 'MILD_MUCUS', 'SMALL_SPIT', 'PROJECTILE'] &&
+             data.hiccups is bool &&
+             data.gasOrDiscomfort is bool &&
+             (!('note' in data) || (data.note is string && data.note.size() <= 300)) &&
+             data.loggedAtMillis is int && data.loggedAtMillis > 0;
+    }
+
+    function isValidCareEvent(data, userId) {
+      return data.userId == userId &&
+             data.category in ['PUMP', 'NASAL_SUCTION', 'WEIGHT', 'VITALS', 'ROUTINE'] &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 100 &&
+             data.numericValue is number && data.numericValue >= 0 && data.numericValue <= 10000 &&
+             data.secondaryValue is number && data.secondaryValue >= 0 && data.secondaryValue <= 10000 &&
+             data.flagAlert is bool &&
+             data.dateKey is string && data.dateKey.size() == 10 &&
+             (!('note' in data) || (data.note is string && data.note.size() <= 300)) &&
+             data.loggedAtMillis is int && data.loggedAtMillis > 0;
+    }
+
+    function isValidVaccineRecord(data, userId) {
+      return data.userId == userId &&
+             data.vaccineCode is string && data.vaccineCode.size() >= 1 && data.vaccineCode.size() <= 40 &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+             data.stageLabel is string && data.stageLabel.size() >= 1 && data.stageLabel.size() <= 60 &&
+             data.dueDateIso is string && data.dueDateIso.size() == 10 &&
+             data.status in ['PENDING', 'DONE'] &&
+             (!('administeredDateIso' in data) || (data.administeredDateIso is string && data.administeredDateIso.size() <= 20)) &&
+             (!('hospitalNote' in data) || (data.hospitalNote is string && data.hospitalNote.size() <= 300)) &&
+             data.reminderEnabled is bool;
+    }
+
+    function isValidCareAlarm(data, userId) {
+      return data.userId == userId &&
+             data.alarmType in ['FEED', 'PUMP', 'VITAMIN_D_SUN', 'VACCINE', 'CUSTOM'] &&
+             data.label is string && data.label.size() >= 1 && data.label.size() <= 100 &&
+             data.hour is int && data.hour >= 0 && data.hour <= 23 &&
+             data.minute is int && data.minute >= 0 && data.minute <= 59 &&
+             data.triggerAtMillis is int && data.triggerAtMillis >= 0 &&
+             data.repeatDaily is bool &&
+             data.enabled is bool;
+    }
+
+    match /users/{userId}/profile/{profileId} {
+      allow get: if isOwner(userId) && isValidId(profileId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(profileId) &&
+                       incoming().keys().hasAll(['userId', 'babyName', 'dob', 'termStatus', 'dueDateReached', 'lastWeightKg', 'feedIntervalHours', 'postFeedUprightMin', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'babyName', 'dob', 'termStatus', 'dueDateReached', 'lastWeightKg', 'feedIntervalHours', 'postFeedUprightMin', 'createdAt', 'updatedAt']) &&
+                       isValidTimestamp(incoming().createdAt) &&
+                       isValidTimestamp(incoming().updatedAt) &&
+                       isValidBabyProfile(incoming(), userId);
+      allow update: if isOwner(userId) && isValidId(profileId) &&
+                       isValidBabyProfile(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidTimestamp(incoming().updatedAt) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['babyName', 'dob', 'termStatus', 'dueDateReached', 'lastWeightKg', 'feedIntervalHours', 'postFeedUprightMin', 'updatedAt']);
+      allow delete: if isOwner(userId) && isValidId(profileId);
+    }
+
+    match /users/{userId}/feeds/{feedId} {
+      allow get: if isOwner(userId) && isValidId(feedId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(feedId) &&
+                       incoming().keys().hasAll(['userId', 'feedType', 'breastMinutes', 'bottleMl', 'burpedMidFeed', 'uprightHoldMinutes', 'salineBeforeFeed', 'loggedAtMillis', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'feedType', 'breastMinutes', 'bottleMl', 'burpedMidFeed', 'uprightHoldMinutes', 'salineBeforeFeed', 'note', 'loggedAtMillis', 'createdAt', 'updatedAt']) &&
+                       isValidTimestamp(incoming().createdAt) &&
+                       isValidTimestamp(incoming().updatedAt) &&
+                       isValidFeedLog(incoming(), userId);
+      allow update: if isOwner(userId) && isValidId(feedId) &&
+                       isValidFeedLog(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidTimestamp(incoming().updatedAt) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['feedType', 'breastMinutes', 'bottleMl', 'burpedMidFeed', 'uprightHoldMinutes', 'salineBeforeFeed', 'note', 'loggedAtMillis', 'updatedAt']);
+      allow delete: if isOwner(userId) && isValidId(feedId);
+    }
+
+    match /users/{userId}/digestionLogs/{logId} {
+      allow get: if isOwner(userId) && isValidId(logId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(logId) &&
+                       incoming().keys().hasAll(['userId', 'wetDiaper', 'stoolPassed', 'stoolColor', 'refluxOrSpitUp', 'hiccups', 'gasOrDiscomfort', 'loggedAtMillis', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'wetDiaper', 'stoolPassed', 'stoolColor', 'refluxOrSpitUp', 'hiccups', 'gasOrDiscomfort', 'note', 'loggedAtMillis', 'createdAt', 'updatedAt']) &&
+                       isValidTimestamp(incoming().createdAt) &&
+                       isValidTimestamp(incoming().updatedAt) &&
+                       isValidDigestionLog(incoming(), userId);
+      allow update: if isOwner(userId) && isValidId(logId) &&
+                       isValidDigestionLog(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidTimestamp(incoming().updatedAt) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['wetDiaper', 'stoolPassed', 'stoolColor', 'refluxOrSpitUp', 'hiccups', 'gasOrDiscomfort', 'note', 'loggedAtMillis', 'updatedAt']);
+      allow delete: if isOwner(userId) && isValidId(logId);
+    }
+
+    match /users/{userId}/careEvents/{eventId} {
+      allow get: if isOwner(userId) && isValidId(eventId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(eventId) &&
+                       incoming().keys().hasAll(['userId', 'category', 'title', 'numericValue', 'secondaryValue', 'flagAlert', 'dateKey', 'loggedAtMillis', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'category', 'title', 'numericValue', 'secondaryValue', 'flagAlert', 'dateKey', 'note', 'loggedAtMillis', 'createdAt', 'updatedAt']) &&
+                       isValidTimestamp(incoming().createdAt) &&
+                       isValidTimestamp(incoming().updatedAt) &&
+                       isValidCareEvent(incoming(), userId);
+      allow update: if isOwner(userId) && isValidId(eventId) &&
+                       isValidCareEvent(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidTimestamp(incoming().updatedAt) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['category', 'title', 'numericValue', 'secondaryValue', 'flagAlert', 'dateKey', 'note', 'loggedAtMillis', 'updatedAt']);
+      allow delete: if isOwner(userId) && isValidId(eventId);
+    }
+
+    match /users/{userId}/vaccines/{vaccineId} {
+      allow get: if isOwner(userId) && isValidId(vaccineId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(vaccineId) &&
+                       incoming().keys().hasAll(['userId', 'vaccineCode', 'name', 'stageLabel', 'dueDateIso', 'status', 'reminderEnabled', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'vaccineCode', 'name', 'stageLabel', 'dueDateIso', 'status', 'administeredDateIso', 'hospitalNote', 'reminderEnabled', 'createdAt', 'updatedAt']) &&
+                       isValidTimestamp(incoming().createdAt) &&
+                       isValidTimestamp(incoming().updatedAt) &&
+                       isValidVaccineRecord(incoming(), userId);
+      allow update: if isOwner(userId) && isValidId(vaccineId) &&
+                       isValidVaccineRecord(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().vaccineCode == existing().vaccineCode &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidTimestamp(incoming().updatedAt) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['status', 'administeredDateIso', 'hospitalNote', 'reminderEnabled', 'updatedAt']);
+      allow delete: if isOwner(userId) && isValidId(vaccineId);
+    }
+
+    match /users/{userId}/alarms/{alarmId} {
+      allow get: if isOwner(userId) && isValidId(alarmId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(alarmId) &&
+                       incoming().keys().hasAll(['userId', 'alarmType', 'label', 'hour', 'minute', 'triggerAtMillis', 'repeatDaily', 'enabled', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'alarmType', 'label', 'hour', 'minute', 'triggerAtMillis', 'repeatDaily', 'enabled', 'createdAt', 'updatedAt']) &&
+                       isValidTimestamp(incoming().createdAt) &&
+                       isValidTimestamp(incoming().updatedAt) &&
+                       isValidCareAlarm(incoming(), userId);
+      allow update: if isOwner(userId) && isValidId(alarmId) &&
+                       isValidCareAlarm(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidTimestamp(incoming().updatedAt) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['alarmType', 'label', 'hour', 'minute', 'triggerAtMillis', 'repeatDaily', 'enabled', 'updatedAt']);
+      allow delete: if isOwner(userId) && isValidId(alarmId);
+    }
+  }
+}

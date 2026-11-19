@@ -1,0 +1,6 @@
+{
+  "name": "Charvik",
+  "description": "Daily newborn care tracker for Charvik (DOB Oct 26, 2026) with feed volume targets, reflux & pump timers, digestion & diaper logs, Apollo Hospitals vaccination schedule, red-flag safety checks, and alarm reminders.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

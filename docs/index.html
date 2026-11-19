@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Charvik — Newborn Care Tracker</title>
+  <meta name="description" content="100% offline newborn care tracker for Charvik (DOB Oct 26, 2026) with feed volume targets, reflux & pumping timers, breathing & temp checks, Apollo vaccination tracker, and Apple Calendar export." />
+  <meta name="theme-color" content="#FAF6F0" id="theme-color-meta" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Charvik" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Persistent Active Alarm Banner -->
+    <div id="ringing-banner" class="ringing-banner hidden" role="alert" aria-live="assertive">
+      <div class="ringing-top">
+        <span style="font-size:24px;">🔔</span>
+        <div style="flex:1;">
+          <div style="font-weight:800;font-size:15px;">Alarm Sound Active</div>
+          <div id="ringing-title" class="small">Care reminder</div>
+        </div>
+      </div>
+      <div class="ringing-actions">
+        <button type="button" class="btn btn-amber" id="btn-snooze-alarm">Snooze +5m</button>
+        <button type="button" class="btn btn-danger" id="btn-stop-alarm">Stop Alarm</button>
+      </div>
+    </div>
+
+    <!-- iPhone Safari Add-to-Home-Screen Helper -->
+    <div id="ios-install-banner" class="install-banner hidden">
+      <div>
+        <strong>Install on iPhone:</strong> Tap <strong>Share</strong> (square with arrow) → <strong>Add to Home Screen</strong> for fullscreen offline mode.
+      </div>
+      <button type="button" class="btn btn-sm btn-outline" id="btn-dismiss-install">Got it</button>
+    </div>
+
+    <!-- Top Brand & Night-Feed / iOS Audio Unlock Header -->
+    <header class="top-header">
+      <div class="brand-mark">
+        <img src="./icons/icon-192.png" alt="Charvik icon" class="brand-icon" />
+        <div>
+          <div class="serif-title" style="font-size:20px;font-weight:800;line-height:1.1;">Charvik</div>
+          <div class="xs muted">100% Offline • On-Device</div>
+        </div>
+      </div>
+      <div class="header-controls">
+        <button type="button" class="icon-pill-btn" id="btn-audio-unlock" aria-label="Unlock iPhone alarm audio">
+          <span id="audio-status-icon">🔇</span>
+          <span id="audio-status-label">Sound</span>
+        </button>
+        <button type="button" class="icon-pill-btn" id="btn-theme-toggle" aria-label="Toggle night-feed dark mode">
+          <span id="theme-icon">🌙</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Screen Mount -->
+    <main id="screen-root"></main>
+  </div>
+
+  <!-- Bottom Tab Navigation -->
+  <nav class="bottom-nav" aria-label="Main navigation">
+    <div class="bottom-nav-inner">
+      <button type="button" class="nav-btn active" data-tab="today">
+        <span class="nav-icon">🏡</span>
+        <span>Today</span>
+      </button>
+      <button type="button" class="nav-btn" data-tab="timers">
+        <span class="nav-icon">⏱️</span>
+        <span>Timers</span>
+      </button>
+      <button type="button" class="nav-btn" data-tab="safety">
+        <span class="nav-icon">🩺</span>
+        <span>Safety</span>
+      </button>
+      <button type="button" class="nav-btn" data-tab="vaccines">
+        <span class="nav-icon">💉</span>
+        <span>Vaccines</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Modal Container -->
+  <div id="modal-root" class="modal-backdrop hidden" role="dialog" aria-modal="true"></div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
